@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Tooltip } from './ui/Tooltip'
 
 type ProductCardProps = {
   id: string
@@ -38,7 +39,7 @@ export default function ProductCard(props: ProductCardProps) {
   } = props
 
   return (
-    <Link to={`/products/${id}`} className={`group relative snap-start bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 transform overflow-hidden border border-gray-100`} style={{ animationDelay: `${index * 0.1}s` }}>
+    <Link to={`/products/${id}`} className={`group relative snap-start bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 transform overflow-hidden border border-gray-100 product-card-enhanced card-enhanced gpu-accelerated`} style={{ animationDelay: `${index * 0.1}s` }}>
       <div className="absolute top-4 left-4 z-10 flex gap-2">
         {isNewProduct && (
           <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-3 py-1 rounded-full font-bold shadow-lg">✨ Mới</span>
@@ -66,9 +67,13 @@ export default function ProductCard(props: ProductCardProps) {
 
       <div className="p-6">
         <div className="flex items-start justify-between mb-3">
-          <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 flex-1 text-lg">{title}</h3>
+          <Tooltip content={title} position="top">
+            <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 flex-1 text-lg cursor-help">{title}</h3>
+          </Tooltip>
           {brand && (
-            <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full ml-2 font-medium">{brand}</span>
+            <Tooltip content={`Thương hiệu: ${brand}`} position="top">
+              <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full ml-2 font-medium cursor-help">{brand}</span>
+            </Tooltip>
           )}
         </div>
 

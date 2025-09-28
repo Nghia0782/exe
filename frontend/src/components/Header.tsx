@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { useUser } from '../shared/UserContext'
 import { Input } from './ui/input'
+import { EnhancedThemeToggle } from './ui/ThemeToggle'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -67,28 +68,28 @@ export default function Header() {
       <div className="container py-4">
         <div className="flex items-center justify-between">
           {/* Left: Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-xl group-hover:scale-110 transition-transform duration-300 shadow-lg">
-              R
-            </div>
-            <span className={`text-2xl font-bold transition-colors duration-300 ${hasScrolled ? 'text-gray-900' : 'text-white'}`}>
-              Rentiva
-            </span>
-          </Link>
+            <Link to="/" className="flex items-center gap-3 group interactive">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-xl group-hover:scale-110 transition-transform duration-300 shadow-lg gpu-accelerated">
+                R
+              </div>
+              <span className={`text-2xl font-bold transition-colors duration-300 text-gradient ${hasScrolled ? 'text-gray-900' : 'text-white'}`}>
+                Rentiva
+              </span>
+            </Link>
           
           {/* Center: Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <Link to="/" className={`transition-colors font-medium ${hasScrolled ? (location.pathname==='/' ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600') : (location.pathname==='/' ? 'text-white' : 'text-white/80 hover:text-white')}`}>
+            <Link to="/" className={`nav-enhanced transition-colors font-medium ${hasScrolled ? (location.pathname==='/' ? 'text-blue-600 active' : 'text-gray-700 hover:text-blue-600') : (location.pathname==='/' ? 'text-white active' : 'text-white/80 hover:text-white')}`}>
               Trang chủ
             </Link>
-            <Link to="/products" className={`transition-colors font-medium ${hasScrolled ? (location.pathname.startsWith('/products') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600') : (location.pathname.startsWith('/products') ? 'text-white' : 'text-white/80 hover:text-white')}`}>
+            <Link to="/products" className={`nav-enhanced transition-colors font-medium ${hasScrolled ? (location.pathname.startsWith('/products') ? 'text-blue-600 active' : 'text-gray-700 hover:text-blue-600') : (location.pathname.startsWith('/products') ? 'text-white active' : 'text-white/80 hover:text-white')}`}>
               Thiết bị
             </Link>
-            <Link to="/about" className={`transition-colors font-medium ${hasScrolled ? (location.pathname.startsWith('/about') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600') : (location.pathname.startsWith('/about') ? 'text-white' : 'text-white/80 hover:text-white')}`}>
+            <Link to="/about" className={`nav-enhanced transition-colors font-medium ${hasScrolled ? (location.pathname.startsWith('/about') ? 'text-blue-600 active' : 'text-gray-700 hover:text-blue-600') : (location.pathname.startsWith('/about') ? 'text-white active' : 'text-white/80 hover:text-white')}`}>
               Về chúng tôi
             </Link>
             {user?.roles?.includes('admin') && (
-              <Link to="/admin" className={`transition-colors font-semibold ${hasScrolled ? (location.pathname.startsWith('/admin') ? 'text-yellow-600' : 'text-yellow-700 hover:text-yellow-600') : 'text-yellow-200 hover:text-white'}`}>
+              <Link to="/admin" className={`nav-enhanced transition-colors font-semibold ${hasScrolled ? (location.pathname.startsWith('/admin') ? 'text-yellow-600 active' : 'text-yellow-700 hover:text-yellow-600') : 'text-yellow-200 hover:text-white'}`}>
                 Admin
               </Link>
             )}
@@ -98,14 +99,14 @@ export default function Header() {
           <div className="flex items-center gap-4">
             {/* Search Bar - Only show on desktop */}
             <form onSubmit={handleSearch} className="hidden lg:flex items-center">
-              <div className="relative">
+              <div className="relative search-enhanced">
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Tìm kiếm thiết bị..."
-                  className={`w-64 transition-all duration-300 ${hasScrolled ? 'bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500' : 'bg-white/20 backdrop-blur-sm border-white/30 text-white placeholder:text-white/60'}`}
+                  className={`w-64 form-input focus-ring transition-all duration-300 ${hasScrolled ? 'bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500' : 'bg-white/20 backdrop-blur-sm border-white/30 text-white placeholder:text-white/60'}`}
                 />
-                <button type="submit" className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${hasScrolled ? 'text-gray-500 hover:text-gray-700' : 'text-white/60 hover:text-white'}`}>
+                <button type="submit" className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors interactive ${hasScrolled ? 'text-gray-500 hover:text-gray-700' : 'text-white/60 hover:text-white'}`}>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <circle cx="11" cy="11" r="7"/>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -192,6 +193,11 @@ export default function Header() {
                   </div>
                 </div>
               )}
+            </div>
+            
+            {/* Theme Toggle */}
+            <div className="hidden sm:block">
+              <EnhancedThemeToggle />
             </div>
             
             {/* Auth Buttons */}

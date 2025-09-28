@@ -1,61 +1,215 @@
-"use client";
+import { useState, useRef, useEffect } from 'react'
+import { cn } from './utils'
 
-import * as React from "react";
-import * as TooltipPrimitive from "@radix-ui/react-tooltip";
-
-import { cn } from "./utils";
-
-function TooltipProvider({
-  delayDuration = 0,
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
-  return (
-    <TooltipPrimitive.Provider
-      data-slot="tooltip-provider"
-      delayDuration={delayDuration}
-      {...props}
-    />
-  );
+interface TooltipProps {
+  children: React.ReactNode
+  content: string
+  position?: 'top' | 'bottom' | 'left' | 'right'
+  delay?: number
+  className?: string
+  disabled?: boolean
 }
 
-function Tooltip({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
-  return (
-    <TooltipProvider>
-      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
-    </TooltipProvider>
-  );
-}
-
-function TooltipTrigger({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
-}
-
-function TooltipContent({
+export function Tooltip({ 
+  children, 
+  content, 
+  position = 'top', 
+  delay = 300,
   className,
-  sideOffset = 0,
-  children,
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+  disabled = false 
+}: TooltipProps) {
+  const [isVisible, setIsVisible] = useState(false)
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null)
+  const tooltipRef = useRef<HTMLDivElement>(null)
+
+  const showTooltip = () => {
+    if (disabled) return
+    
+    const id = setTimeout(() => {
+      setIsVisible(true)
+    }, delay)
+    setTimeoutId(id)
+  }
+
+  const hideTooltip = () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+      setTimeoutId(null)
+    }
+    setIsVisible(false)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+    }
+  }, [timeoutId])
+
+  const positionClasses = {
+    top: 'bottom-full left-1/2 transform -translate-x-1/2 mb-2',
+    bottom: 'top-full left-1/2 transform -translate-x-1/2 mt-2',
+    left: 'right-full top-1/2 transform -translate-y-1/2 mr-2',
+    right: 'left-full top-1/2 transform -translate-y-1/2 ml-2'
+  }
+
+  const arrowClasses = {
+    top: 'top-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-gray-900',
+    bottom: 'bottom-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-gray-900',
+    left: 'left-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-gray-900',
+    right: 'right-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-gray-900'
+  }
+
   return (
-    <TooltipPrimitive.Portal>
-      <TooltipPrimitive.Content
-        data-slot="tooltip-content"
-        sideOffset={sideOffset}
-        className={cn(
-          "bg-primary text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) rounded-md px-3 py-1.5 text-xs text-balance",
-          className,
-        )}
-        {...props}
-      >
-        {children}
-        <TooltipPrimitive.Arrow className="bg-primary fill-primary z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px]" />
-      </TooltipPrimitive.Content>
-    </TooltipPrimitive.Portal>
-  );
+    <div 
+      className="relative inline-block"
+      onMouseEnter={showTooltip}
+      onMouseLeave={hideTooltip}
+      onFocus={showTooltip}
+      onBlur={hideTooltip}
+    >
+      {children}
+      
+      {isVisible && (
+        <div
+          ref={tooltipRef}
+          className={cn(
+            'absolute z-50 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg whitespace-nowrap',
+            'animate-fade-in',
+            positionClasses[position],
+            className
+          )}
+          role="tooltip"
+        >
+          {content}
+          <div
+            className={cn(
+              'absolute w-0 h-0 border-4',
+              arrowClasses[position]
+            )}
+          />
+        </div>
+      )}
+    </div>
+  )
 }
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider };
+// Enhanced Tooltip with more features
+interface EnhancedTooltipProps {
+  children: React.ReactNode
+  title: string
+  description?: string
+  position?: 'top' | 'bottom' | 'left' | 'right'
+  delay?: number
+  className?: string
+  disabled?: boolean
+  trigger?: 'hover' | 'click' | 'focus'
+}
+
+export function EnhancedTooltip({
+  children,
+  title,
+  description,
+  position = 'top',
+  delay = 200,
+  className,
+  disabled = false,
+  trigger = 'hover'
+}: EnhancedTooltipProps) {
+  const [isVisible, setIsVisible] = useState(false)
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null)
+  const tooltipRef = useRef<HTMLDivElement>(null)
+
+  const showTooltip = () => {
+    if (disabled) return
+    
+    const id = setTimeout(() => {
+      setIsVisible(true)
+    }, delay)
+    setTimeoutId(id)
+  }
+
+  const hideTooltip = () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+      setTimeoutId(null)
+    }
+    setIsVisible(false)
+  }
+
+  const handleClick = () => {
+    if (trigger === 'click') {
+      setIsVisible(!isVisible)
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+    }
+  }, [timeoutId])
+
+  const positionClasses = {
+    top: 'bottom-full left-1/2 transform -translate-x-1/2 mb-3',
+    bottom: 'top-full left-1/2 transform -translate-x-1/2 mt-3',
+    left: 'right-full top-1/2 transform -translate-y-1/2 mr-3',
+    right: 'left-full top-1/2 transform -translate-y-1/2 ml-3'
+  }
+
+  const arrowClasses = {
+    top: 'top-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-gray-800',
+    bottom: 'bottom-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-gray-800',
+    left: 'left-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-gray-800',
+    right: 'right-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-gray-800'
+  }
+
+  const eventHandlers = {
+    hover: {
+      onMouseEnter: showTooltip,
+      onMouseLeave: hideTooltip
+    },
+    click: {
+      onClick: handleClick
+    },
+    focus: {
+      onFocus: showTooltip,
+      onBlur: hideTooltip
+    }
+  }
+
+  return (
+    <div 
+      className="relative inline-block"
+      {...eventHandlers[trigger]}
+    >
+      {children}
+      
+      {isVisible && (
+        <div
+          ref={tooltipRef}
+          className={cn(
+            'absolute z-50 max-w-xs p-4 bg-gray-800 text-white rounded-xl shadow-2xl',
+            'animate-fade-in-up',
+            positionClasses[position],
+            className
+          )}
+          role="tooltip"
+        >
+          <div className="font-semibold text-sm mb-1">{title}</div>
+          {description && (
+            <div className="text-xs text-gray-300 leading-relaxed">{description}</div>
+          )}
+          <div
+            className={cn(
+              'absolute w-0 h-0 border-4',
+              arrowClasses[position]
+            )}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
