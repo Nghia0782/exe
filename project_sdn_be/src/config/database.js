@@ -10,7 +10,11 @@ const connectDB = async () => {
       bufferCommands: false
     };
 
-    await mongoose.connect(process.env.MONGO_URI, options);
+    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+    if (!mongoUri) {
+      throw new Error('Missing MONGO_URI or MONGODB_URI in environment variables');
+    }
+    await mongoose.connect(mongoUri, options);
     console.log("MongoDB connected successfully");
     
     // Kiểm tra xem có hỗ trợ transactions không
