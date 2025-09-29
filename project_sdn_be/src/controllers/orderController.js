@@ -26,6 +26,7 @@ import ProductDetail from '../models/ProductDetail.js';
 import ShopDetail from '../models/ShopDetail.js';
 import Deposit from '../models/Deposit.js';
 import OrderReview from '../models/OrderReview.js';
+import OrderEvidence from '../models/OrderEvidence.js';
 
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
@@ -584,6 +585,19 @@ export const startDeliveryController = async (req, res) => {
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
     if (!isOrderOwner(actorId, ownerUserId)) return res.status(403).json({ success: false, message: 'Only owner can start delivery' });
     if (order.status !== 'confirmed') return res.status(400).json({ success: false, message: 'Order must be confirmed first' });
+    // Optional: accept photo evidence at dispatch time
+    const { images = [], videos = [], note } = req.body || {};
+    if (Array.isArray(images) && images.length > 0) {
+      await OrderEvidence.create({
+        orderId,
+        evidenceType: 'delivery',
+        images,
+        videos: Array.isArray(videos) ? videos : [],
+        description: note || 'Dispatch proof by owner',
+        submittedBy: 'owner',
+        status: 'approved'
+      });
+    }
     req.body.status = 'in_delivery';
     return await updateOrderStatusController(req, res);
   } catch (e) {
@@ -599,8 +613,54 @@ export const markReceivedController = async (req, res) => {
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
     if (order.customerId?.toString() !== actorId?.toString()) return res.status(403).json({ success: false, message: 'Only customer can mark received' });
     if (order.status !== 'in_delivery') return res.status(400).json({ success: false, message: 'Order must be in delivery' });
+    // Optional: accept delivery proof from receiver
+    const { images = [], videos = [], note } = req.body || {};
+    if (Array.isArray(images) && images.length > 0) {
+      await OrderEvidence.create({
+        orderId,
+        evidenceType: 'delivery',
+        images,
+        videos: Array.isArray(videos) ? videos : [],
+        description: note || 'Delivery received proof by renter',
+        submittedBy: 'renter',
+        status: 'approved'
+      });
+    }
     req.body.status = 'before_deadline';
     return await updateOrderStatusController(req, res);
+  } catch (e) {
+    return res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+// Explicit endpoints to upload dispatch/delivery proofs with images first, without changing implicit flows
+export const submitDispatchProofController = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const actorId = req.authenticatedUser?.userId || req.user?._id;
+    const { order, ownerUserId } = await loadOrderWithShopOwner(orderId);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+    if (!isOrderOwner(actorId, ownerUserId)) return res.status(403).json({ success: false, message: 'Only owner can submit dispatch proof' });
+    const { images = [], videos = [], note } = req.body || {};
+    if (!Array.isArray(images) || images.length === 0) return res.status(400).json({ success: false, message: 'images[] is required' });
+    const doc = await OrderEvidence.create({ orderId, evidenceType: 'delivery', images, videos: Array.isArray(videos) ? videos : [], description: note || 'Dispatch proof by owner', submittedBy: 'owner' });
+    return res.status(201).json({ success: true, data: doc });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+export const submitDeliveryProofController = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const actorId = req.authenticatedUser?.userId || req.user?._id;
+    const { order } = await loadOrderWithShopOwner(orderId);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+    if (order.customerId?.toString() !== actorId?.toString()) return res.status(403).json({ success: false, message: 'Only customer can submit delivery proof' });
+    const { images = [], videos = [], note } = req.body || {};
+    if (!Array.isArray(images) || images.length === 0) return res.status(400).json({ success: false, message: 'images[] is required' });
+    const doc = await OrderEvidence.create({ orderId, evidenceType: 'delivery', images, videos: Array.isArray(videos) ? videos : [], description: note || 'Delivery received proof by renter', submittedBy: 'renter' });
+    return res.status(201).json({ success: true, data: doc });
   } catch (e) {
     return res.status(500).json({ success: false, message: e.message });
   }

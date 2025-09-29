@@ -19,6 +19,8 @@ import {
   completeOrderController,
   cancelOrderController,
   createOrderReviewController,
+  submitDispatchProofController,
+  submitDeliveryProofController,
 } from '../controllers/orderController.js';
 import { protect, authorizeRoles, ensureKycApproved } from '../middlewares/authMiddleware.js';
 const router = express.Router();
@@ -65,6 +67,9 @@ router.get('/:orderId/payment-qr', protect, getOrderPaymentQrController);
 router.post('/:orderId/confirm', protect, confirmOrderController);
 router.post('/:orderId/start-delivery', protect, startDeliveryController);
 router.post('/:orderId/mark-received', protect, markReceivedController);
+// Proof endpoints
+router.post('/:orderId/dispatch-proof', protect, submitDispatchProofController);
+router.post('/:orderId/delivery-proof', protect, submitDeliveryProofController);
 router.post('/:orderId/request-return', protect, requestReturnController);
 router.post('/:orderId/complete', protect, completeOrderController);
 router.post('/:orderId/cancel', protect, cancelOrderController);
