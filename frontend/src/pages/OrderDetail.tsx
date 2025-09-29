@@ -54,6 +54,22 @@ export default function OrderDetail() {
   const [dispatchImage, setDispatchImage] = useState('')
   const [receiveImage, setReceiveImage] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [uploading, setUploading] = useState(false)
+
+  const uploadToCloudinary = async (file: File): Promise<string> => {
+    const form = new FormData()
+    form.append('my_file', file)
+    setUploading(true)
+    try {
+      const res = await api.post('/cloudinary', form, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      // cloudinaryRouter returns Cloudinary upload result
+      return res.data?.secure_url || res.data?.url
+    } finally {
+      setUploading(false)
+    }
+  }
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -262,6 +278,17 @@ export default function OrderDetail() {
                   className="w-72 px-3 py-2 rounded-xl border border-gray-300"
                   placeholder="URL ảnh khi gửi hàng (Cloudinary)"
                 />
+                <label className="px-3 py-2 rounded-xl border border-gray-300 bg-white cursor-pointer text-sm">
+                  {uploading ? 'Đang tải...' : 'Tải ảnh lên'}
+                  <input type="file" accept="image/*" className="hidden" onChange={async (e)=>{
+                    const f = e.target.files?.[0]
+                    if (!f) return
+                    try {
+                      const url = await uploadToCloudinary(f)
+                      if (url) setDispatchImage(url)
+                    } catch { alert('Upload thất bại') }
+                  }} />
+                </label>
                 <button
                   onClick={onStartDelivery}
                   disabled={submitting}
@@ -281,6 +308,17 @@ export default function OrderDetail() {
                   className="w-72 px-3 py-2 rounded-xl border border-gray-300"
                   placeholder="URL ảnh khi nhận hàng (Cloudinary)"
                 />
+                <label className="px-3 py-2 rounded-xl border border-gray-300 bg-white cursor-pointer text-sm">
+                  {uploading ? 'Đang tải...' : 'Tải ảnh lên'}
+                  <input type="file" accept="image/*" className="hidden" onChange={async (e)=>{
+                    const f = e.target.files?.[0]
+                    if (!f) return
+                    try {
+                      const url = await uploadToCloudinary(f)
+                      if (url) setReceiveImage(url)
+                    } catch { alert('Upload thất bại') }
+                  }} />
+                </label>
                 <button
                   onClick={onMarkReceived}
                   disabled={submitting}
