@@ -295,9 +295,23 @@ export const createOrderController = async (req, res) => {
 export const updateOrderStatusController = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { status, paymentStatus } = req.body;
+    let { status, paymentStatus } = req.body;
 
     console.log('[Update Order Status] Request:', { orderId, status, paymentStatus });
+
+    // Normalize common frontend synonyms to schema enum values
+    const statusMap = {
+      cancelled: 'canceled',
+      approved: 'confirmed',
+      shipped: 'in_delivery',
+      delivering: 'in_delivery',
+      received: 'before_deadline',
+      returning: 'return_product',
+      complete: 'completed',
+    } as Record<string, string>;
+    if (typeof status === 'string' && statusMap[status]) {
+      status = statusMap[status];
+    }
 
     const updatedOrder = await updateOrderStatus(orderId, status, paymentStatus);
     if (!updatedOrder) {
