@@ -90,13 +90,29 @@ export default function AdminProducts() {
     }))
   }
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    const imageUrls = files.map(file => URL.createObjectURL(file))
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, ...imageUrls]
-    }))
+    if (files.length === 0) return
+    try {
+      setLoading(true)
+      const uploaded: string[] = []
+      for (const file of files) {
+        const form = new FormData()
+        form.append('my_file', file)
+        const res = await api.post('/cloudinary', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+        const url = res.data?.secure_url || res.data?.url
+        if (url) uploaded.push(url)
+      }
+      if (uploaded.length > 0) {
+        setFormData(prev => ({ ...prev, images: [...prev.images, ...uploaded] }))
+        setMessage(`✅ Đã tải lên ${uploaded.length} ảnh`)
+      }
+    } catch (err) {
+      console.error('Upload images failed:', err)
+      setMessage('❌ Tải ảnh lên thất bại. Hãy kiểm tra quyền đăng nhập/KYC.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const removeImage = (index: number) => {
