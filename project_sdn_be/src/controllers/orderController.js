@@ -308,7 +308,7 @@ export const updateOrderStatusController = async (req, res) => {
       received: 'before_deadline',
       returning: 'return_product',
       complete: 'completed',
-    } as Record<string, string>;
+    };
     if (typeof status === 'string' && statusMap[status]) {
       status = statusMap[status];
     }
