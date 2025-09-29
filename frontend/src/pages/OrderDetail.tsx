@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { api } from '../shared/api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import { useUser } from '../shared/UserContext'
 
 type OrderDetail = {
   _id: string
@@ -49,6 +50,10 @@ export default function OrderDetail() {
   const { id } = useParams<{ id: string }>()
   const [order, setOrder] = useState<OrderDetail | null>(null)
   const [loading, setLoading] = useState(false)
+  const { user } = useUser()
+  const [dispatchImage, setDispatchImage] = useState('')
+  const [receiveImage, setReceiveImage] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -67,6 +72,48 @@ export default function OrderDetail() {
     }
     fetchOrder()
   }, [id])
+
+  const refreshOrder = async () => {
+    if (!id) return
+    try {
+      const res = await api.get(`/orders/${id}`)
+      setOrder(res.data?.metadata || res.data?.order || res.data)
+    } catch {}
+  }
+
+  const onStartDelivery = async () => {
+    if (!id) return
+    try {
+      setSubmitting(true)
+      await api.post(`/orders/${id}/start-delivery`, {
+        images: dispatchImage ? [dispatchImage] : []
+      })
+      await refreshOrder()
+      setDispatchImage('')
+      alert('Đã xác nhận gửi hàng')
+    } catch (e) {
+      alert('Gửi thất bại')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const onMarkReceived = async () => {
+    if (!id) return
+    try {
+      setSubmitting(true)
+      await api.post(`/orders/${id}/mark-received`, {
+        images: receiveImage ? [receiveImage] : []
+      })
+      await refreshOrder()
+      setReceiveImage('')
+      alert('Đã xác nhận đã nhận hàng')
+    } catch (e) {
+      alert('Xác nhận thất bại')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -191,7 +238,7 @@ export default function OrderDetail() {
           )}
 
           {/* Actions */}
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4 items-center">
             <Link to="/orders" className="px-5 py-3 rounded-2xl border border-blue-200 text-blue-700 bg-white hover:bg-blue-50 transition-all">
               ← Quay lại danh sách
             </Link>
@@ -204,6 +251,44 @@ export default function OrderDetail() {
               <button className="px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:from-blue-700 hover:to-cyan-600 transition-all">
                 Thanh toán ngay
               </button>
+            )}
+
+            {/* Owner actions: start delivery with photo */}
+            {user?.roles?.includes('admin') && order.status === 'confirmed' && (
+              <div className="flex items-center gap-2">
+                <input
+                  value={dispatchImage}
+                  onChange={e=>setDispatchImage(e.target.value)}
+                  className="w-72 px-3 py-2 rounded-xl border border-gray-300"
+                  placeholder="URL ảnh khi gửi hàng (Cloudinary)"
+                />
+                <button
+                  onClick={onStartDelivery}
+                  disabled={submitting}
+                  className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white hover:from-emerald-700 hover:to-teal-600 transition-all disabled:opacity-50"
+                >
+                  Xác nhận đã gửi hàng
+                </button>
+              </div>
+            )}
+
+            {/* Customer actions: mark received with photo */}
+            {order.status === 'in_delivery' && (
+              <div className="flex items-center gap-2">
+                <input
+                  value={receiveImage}
+                  onChange={e=>setReceiveImage(e.target.value)}
+                  className="w-72 px-3 py-2 rounded-xl border border-gray-300"
+                  placeholder="URL ảnh khi nhận hàng (Cloudinary)"
+                />
+                <button
+                  onClick={onMarkReceived}
+                  disabled={submitting}
+                  className="px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-500 text-white hover:from-cyan-700 hover:to-blue-600 transition-all disabled:opacity-50"
+                >
+                  Xác nhận đã nhận hàng
+                </button>
+              </div>
             )}
           </div>
         </div>
