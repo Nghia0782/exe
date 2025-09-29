@@ -65,8 +65,8 @@ export const createPaymentUrl = async (paymentData) => {
         vnp_Params['vnp_IpAddr'] = process.env.VNP_IPADDR || '127.0.0.1';
         vnp_Params['vnp_CreateDate'] = createDate;
         vnp_Params['vnp_ExpireDate'] = expireDate;
-        // Khai báo rõ kiểu chữ ký theo khuyến nghị của VNPay
-        vnp_Params['vnp_SecureHashType'] = 'HMACSHA512';
+        // KHÔNG thêm vnp_SecureHashType vào bộ tham số trước khi ký
+        // Theo chuẩn VNPay, chuỗi ký chỉ bao gồm các tham số ngoại trừ vnp_SecureHash
 
         if (bankCode !== null && bankCode !== '') {
             vnp_Params['vnp_BankCode'] = bankCode;
@@ -97,6 +97,8 @@ export const createPaymentUrl = async (paymentData) => {
         console.log('[VNPAY DEBUG] Hash secret length:', VNPAY_CONFIG.vnp_HashSecret.length);
         console.log('[VNPAY DEBUG] Generated signature:', signed);
         
+        // Sau khi ký xong mới bổ sung SecureHashType và SecureHash
+        vnp_Params['vnp_SecureHashType'] = 'HMACSHA512';
         vnp_Params['vnp_SecureHash'] = signed;
         
         // Log chẩn đoán (không lộ secret)
