@@ -1,16 +1,12 @@
 import axios from 'axios'
 
-// Prefer VITE_API_URL; fallback to window location when available; final fallback to localhost
+// Prefer VITE_API_URL; fallback directly to localhost backend in dev
 function resolveBaseURL(): string {
   const env = (import.meta as any)?.env
   const viteUrl = env?.VITE_API_URL as string | undefined
   if (viteUrl && typeof viteUrl === 'string') {
     return viteUrl.replace(/\/$/, '') + '/api'
   }
-  try {
-    const origin = typeof window !== 'undefined' ? window.location.origin : ''
-    if (origin) return origin.replace(/\/$/, '') + '/api'
-  } catch {}
   return 'http://localhost:5000/api'
 }
 
