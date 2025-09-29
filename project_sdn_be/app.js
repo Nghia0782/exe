@@ -75,10 +75,15 @@ app.get('/', (req, res) => {
   console.log('heee');
   res.json({ message: 'Welcome to Techrental API' });
 });
+// Support both legacy and CLOUDINARY_* env variable names
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME
+const CLOUDINARY_API_KEY = process.env.API_KEY || process.env.CLOUDINARY_API_KEY
+const CLOUDINARY_API_SECRET = process.env.API_SECRET || process.env.CLOUDINARY_API_SECRET
+
 cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.API_KEY,
-  api_secret: process.env.API_SECRET,
+  cloud_name: CLOUDINARY_CLOUD_NAME,
+  api_key: CLOUDINARY_API_KEY,
+  api_secret: CLOUDINARY_API_SECRET,
 });
 
 // 404 Not Found handler
